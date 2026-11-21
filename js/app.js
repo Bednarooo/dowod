@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         // 2. change content while invisible
         img.src = "img/food.jpg";
-        label.innerText = "Jedzenie 🍕";
+        label.innerText = "Jedzenie 🍝";
 
         // 3. fade in
         partyChoice.classList.remove("fade-out");
@@ -126,23 +126,31 @@ document.addEventListener("DOMContentLoaded", () => {
   choices.forEach(choice => {
     choice.addEventListener('click', () => {
 
-      choices.forEach(c => c.classList.remove('selected'));
+      // Toggle selected state
+      choice.classList.toggle('selected');
 
-      choice.classList.add('selected');
+      // Check if at least one option is selected
+      const hasSelection = [...choices].some(c =>
+        c.classList.contains('selected')
+      );
 
-      dateSection.classList.add('show');
+      // Show date section only if something is selected
+      if (hasSelection) {
+        dateSection.classList.add('show');
+      } else {
+        dateSection.classList.remove('show');
+      }
     });
   });
 
   flatpickr("#datePicker", {
     disable: [
-      "2026-06-26",
-      "2026-06-27",
-      "2026-06-28",
-      "2026-06-29",
+      "2026-11-27",
+      "2026-11-28",
+      "2026-11-29",
     ],
     locale: "pl",
-    minDate: "2026-06-19",
+    minDate: "2026-11-22",
     dateFormat: "d.m.Y",
   });
 
@@ -157,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     confetti({
       particleCount: 300,
       spread: 180,
-      origin: { y: 0.6 }
+      origin: {y: 0.6}
     });
   }
 
@@ -226,16 +234,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    let selectedChoice
-    choices.forEach(choice => {
-      if (choice.classList.contains('selected')) {
-        selectedChoice = choice;
-      }
-    })
+    // Collect all selected choices
+    const selectedChoices = [...choices]
+      .filter(choice => choice.classList.contains('selected'))
+      .map(choice => choice.querySelector("p").innerText);
 
-    console.log("Wybrana data:", date, "Wybor randki: ", selectedChoice);
+    if (selectedChoices.length === 0) {
+      alert("Najpierw wybierz przynajmniej jedną opcję :)");
+      return;
+    }
 
-    const label = selectedChoice?.querySelector("p")?.innerText;
+    console.log("Wybrana data:", date);
+    console.log("Wybrane opcje:", selectedChoices);
 
     fetch("https://formspree.io/f/mzdqjnyd", {
       method: "POST",
@@ -244,12 +254,14 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       body: JSON.stringify({
         date,
-        choice: label
+        choices: selectedChoices,
+        choice: selectedChoices.join(", ")
       })
     });
 
     // 1. podsumowanie
-    summaryText.innerText = `Zaznacz sobie w kalendarzyku! 📅\n${date} • ${label} z Kacprem`;
+    summaryText.innerText = `Zaznacz sobie w kalendarzyku! 📅
+    ${date} • ${selectedChoices.join(", ")} z Kacprem`;
 
     // 3. show screen
     finalScreen.classList.add("show");
